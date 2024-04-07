@@ -30,6 +30,7 @@ For T32c use PMODE 3
 You can also “LOAD” the .bin files directly into XROAR but do not use the “RUN” file option as it will crash (discussion below). Having loaded the bin file use EXEC addresses in the file “txx file sizes.txt”.
 
 How it Works
+
 When turned on the routines intercept the line in (to flash the cursor) and character out ram hooks and generates the appropriate characters on the graphics screen. It also uses the ram hook for key in to check for use of the clear and break keys since they both affect text output position.
 The bitmaps for the graphics text characters are held at the top of memory. To save space only characters 32 to 132 are used. Characters are stored as eight, one byte slices. Using larger character sets is simple but typically you will need to reassemble the binaries (see below).
 Txx comes in separate versions for each combination of 32, 51, 64 and 32 column colour and Dragon 32, Dragon 64 and Dragon 32 with disk system. The Dragon 32 versions should run on a 64 when it is in Dragon 32 mode. As far as I can tell you cannot have a Dragon 64 running in 64K mode with a disk system so there are no versions for that (though it maybe it would be possible to get Txx to reside in the unused 16K when a Dragon 64 is in 32K mode with disks running?).
@@ -37,6 +38,7 @@ Note that Txx needs some code to load that it does not need when running. Once l
 To improve speed and save memory when you use TCOL it changes the colours of the character set in memory. This means you get an error in colour mode if you try to set ink = paper. If the system allowed this you could never get the character set back to different ink and paper as the recolour routine could not tell what was meant to be ink and what was meant to be paper.
 You will also get an error if you try TEON in PMODE 1 or 2 as otherwise it could result in the system overwriting the BASIC program area.
 Creating the bin files
+
 Txx.asm is the master assembly language file for all versions of Txx. Running the batch file makeTxx.bat (ideally from the command prompt so you can see any errors) will generate all versions of Txx.
 makeTxx.bat sets key parameters used in the assembly language file as to which version of Txx to generate on each pass. They can be set manually within Txx.asm if you only wish to generate one version at a time. See comments in Txx.asm.
 makeTxx.bat assembles each version of Txx.asm twice. The first time is to find the size of the assembled binary file and the second time to use that size to set the header of the binary file so XROAR knows where to load the binary so it is snug against the top of RAM. It also generates the text file “txx file sizes.txt” which lists the size and EXEC address of each version of Txx.
