@@ -3,10 +3,15 @@
 
 Txx – Routines for Switching Dragon 32 and 64 text output to the graphics screens
 The routines are:
+
 • T32 - 32 column by 24 row text in PMODE 4
+
 • T51 - 51 column by 24 row text in PMODE 4
+
 • T64 - 64 column by 24 row text in PMODE 4
+
 • T32c - 32 column by 24 row colour text in PMODE 3
+
 (T32w is also included, it is T32 with a silly font (Westminster) for demonstration purposes)
 
 Quick Start
@@ -57,13 +62,23 @@ The character set is stored between whichever version of Txx is running and the 
 Character sets can be defined and edited using the Windows App DragonChrDesigner.exe (copy in the ChrBitMaps folder).
 
 • Select character you wish to design by typing its ASC code in the box towards the top left, or clicking on it (if previously defined) in the box at the bottom that displays all characters.
+
 • Characters are defined as black ink on green paper.
+
 • Typically you need to leave a blank column on one side of a character and a blank line at the top or bottom so characters have spaces between them when printed. I’ve found it is better to leave the left column and top line blank as it reduces clashes with the screen border.
+
 • For 32 column mode the characters are eight bits wide (less one for spacing) so you most letters you have seven bits to play with.
+
 • For 51 column mode characters are five bits wide total. You must use the five leftmost bits of the character design grid. Anything in the rightmost three bits is ignored by Txx.
+
 • For 64 column mode characters are four bits wide so only three are available for letters etc which is a challenge but just about works. You must use the four leftmost bits of the character design grid. Anything in the rightmost four bits will be lost (see next point).
+
 • To speed up 64 column mode each character needs to be duplicated in the left and right four bits of each byte. The “Mirror” button does this for you. Use it before saving the character set. Top tip – keep one version of a 64 column character set un-mirrored and use it to work on before saving a mirrored set under a different name.
+
 • Character sets for 32 column colour mode should be designed as if for 64 columns (but do not use mirror). Before saving check the “Save as colour 32 column PMODE 3” box and select the ink and paper colours (I recommend 1,2 to begin with). Once saved character sets for this mode become very difficult to edit (as two bits are used for each pixel) so save first under a different file name without checking the PMODE 3 box and use that version for further edits.
+
 • The “nudge” buttons will move the whole character set one bit up, down, left or right. The bits that disappear off the screen when doing this cannot be retrieved so be careful.
+
 • Alternative character sets you create can be loaded into Txx but changing the references at the bottom of the Txx.asm file.
+
 • For larger character sets change the size limit in the box on the left of the screen (up to 255). There is no facility at present to allow characters below no. 32 to be defined.
