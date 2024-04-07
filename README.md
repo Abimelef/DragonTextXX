@@ -1,6 +1,8 @@
 # DragonTextXX
 6809 assembler routines to enable 32, 51 or 64 column test on the Dragon 32 or Dragon 64 graphics screen
 
+It has been developed under Windows using ASM6809 and the XROAR emulator.
+
 Txx – Routines for Switching Dragon 32 and 64 text output to the graphics screens
 The routines are:
 
