@@ -33,13 +33,16 @@ How it Works
 
 When turned on the routines intercept the line in (to flash the cursor) and character out ram hooks and generates the appropriate characters on the graphics screen. It also uses the ram hook for key in to check for use of the clear and break keys since they both affect text output position.
 The bitmaps for the graphics text characters are held at the top of memory. To save space only characters 32 to 132 are used. Characters are stored as eight, one byte slices. Using larger character sets is simple but typically you will need to reassemble the binaries (see below).
+
 Txx comes in separate versions for each combination of 32, 51, 64 and 32 column colour and Dragon 32, Dragon 64 and Dragon 32 with disk system. The Dragon 32 versions should run on a 64 when it is in Dragon 32 mode. As far as I can tell you cannot have a Dragon 64 running in 64K mode with a disk system so there are no versions for that (though it maybe it would be possible to get Txx to reside in the unused 16K when a Dragon 64 is in 32K mode with disks running?).
+
 Note that Txx needs some code to load that it does not need when running. Once loaded the routines call part of the BASIC CLEAR routine to reset the top of memory to just below the code it needs to run. This saves about 100 bytes. On the downside it wipes any BASIC variables in memory. It also caused a crash if you try to directly run a BIN file from XROAR. This seems to be because the run routine in XROAR seems to need the system stack intact and CLEAR resets it.
-To improve speed and save memory when you use TCOL it changes the colours of the character set in memory. This means you get an error in colour mode if you try to set ink = paper. If the system allowed this you could never get the character set back to different ink and paper as the recolour routine could not tell what was meant to be ink and what was meant to be paper.
-You will also get an error if you try TEON in PMODE 1 or 2 as otherwise it could result in the system overwriting the BASIC program area.
+
+To improve speed and save memory when you use TCOL it changes the colours of the character set in memory. This means you get an error in colour mode if you try to set ink = paper. If the system allowed this you could never get the character set back to different ink and paper as the recolour routine could not tell what was meant to be ink and what was meant to be paper. You will also get an error if you try TEON in PMODE 1 or 2 as otherwise it could result in the system overwriting the BASIC program area.
+
 Creating the bin files
 
-Txx.asm is the master assembly language file for all versions of Txx. Running the batch file makeTxx.bat (ideally from the command prompt so you can see any errors) will generate all versions of Txx.
+Txx.asm is the master assembly language file for all versions of Txx. Running the PC batch file makeTxx.bat (ideally from the command prompt so you can see any errors) will generate all versions of Txx.
 makeTxx.bat sets key parameters used in the assembly language file as to which version of Txx to generate on each pass. They can be set manually within Txx.asm if you only wish to generate one version at a time. See comments in Txx.asm.
 makeTxx.bat assembles each version of Txx.asm twice. The first time is to find the size of the assembled binary file and the second time to use that size to set the header of the binary file so XROAR knows where to load the binary so it is snug against the top of RAM. It also generates the text file “txx file sizes.txt” which lists the size and EXEC address of each version of Txx.
 txxMake.bat assumes the assembler asm6809 is installed with its .exe file in the same folder as txxMake.bat etc or pointed to by your PATH system variable.
@@ -48,8 +51,11 @@ There is a switch in the Txx.asm file for systems using the Cumana disk interfac
 To turn XROAR bin files into Dragon cassette or disk files load the bin and then, before you run the bin, use CSAVEM “NAME”, start-address, top-of-RAM, start-address where start-address is found in “txx file sizes.txt” or by checking the file size after assembly and subtracting it from the top-of-RAM. For disk systems use SAVE “NAME”, start-address, top-of-RAM, start-address. The resulting files can be LOADed and EXECed directly in XROAR.
 
 Character Sets
+
 The character set is stored between whichever version of Txx is running and the top of RAM. Typically, there are 100 characters so the character set starts at 32767 - 800 in the Dragon 32 and 49272-800 in the Dragon 64. If you define a larger character set and reassemble the binaries to use it the characters will start at number of characters x 8 below the top of RAM. They can be changed directly by the Dragon by poking values to the appropriate memory addresses.
+
 Character sets can be defined and edited using the Windows App DragonChrDesigner.exe (copy in the ChrBitMaps folder).
+
 • Select character you wish to design by typing its ASC code in the box towards the top left, or clicking on it (if previously defined) in the box at the bottom that displays all characters.
 • Characters are defined as black ink on green paper.
 • Typically you need to leave a blank column on one side of a character and a blank line at the top or bottom so characters have spaces between them when printed. I’ve found it is better to leave the left column and top line blank as it reduces clashes with the screen border.
