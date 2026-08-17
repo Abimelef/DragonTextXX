@@ -4,20 +4,20 @@ SET target=txx.asm
 echo Files for Dragon 32 no disk operating system > "txx file sizes.txt"
 
 REM assemble once to get file size
-asm6809 %target% --define T32c=1 --define FileSize=2000 -o t32c.bin
+asm6809 %target% --define T32c=1 --define FileSize=2000 -o T32c.bin
 REM get file size
-FOR /F "usebackq" %%A IN ('t32c.bin') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('T32c.bin') DO set size=%%~zA
 REM assemble again passing correct file size as parameter
 SET /A size = size-9
-asm6809 %target% --define T32c=1 --define FileSize=%size% -o t32c.bin
+asm6809 %target% --define T32c=1 --define FileSize=%size% -o T32c.bin
 SET /A exec = 32767-%size%+1
 REM make a note of file size and EXEC address
 echo T32c.bin size = %size% , EXEC address = %exec% >> "txx file sizes.txt"
 
-asm6809 %target% --define T32=1 --define FileSize=2000 -o t32.bin
-FOR /F "usebackq" %%A IN ('t32.bin') DO set size=%%~zA
+asm6809 %target% --define T32=1 --define FileSize=2000 -o T32.bin
+FOR /F "usebackq" %%A IN ('T32.bin') DO set size=%%~zA
 SET /A size = size-9
-asm6809 %target% --define T32=1 --define FileSize=%size% -o t32.bin
+asm6809 %target% --define T32=1 --define FileSize=%size% -o T32.bin
 SET /A exec = 32767-%size%+1
 echo T32.bin  size = %size% , EXEC address = %exec% >> "txx file sizes.txt"
 
@@ -40,17 +40,17 @@ echo. >> "txx file sizes.txt"
 
 echo Files for Dragon 64 no disk operating system >> "txx file sizes.txt"
 
-asm6809 %target% --define T32c=1 --define FileSize=2000 --define CompilingForDragon64=1 -o t32c-64.bin
-FOR /F "usebackq" %%A IN ('t32c-64.bin') DO set size=%%~zA
+asm6809 %target% --define T32c=1 --define FileSize=2000 --define CompilingForDragon64=1 -o T32c-64.bin
+FOR /F "usebackq" %%A IN ('T32c-64.bin') DO set size=%%~zA
 SET /A size = size-9
-asm6809 %target% --define T32c=1 --define FileSize=%size% --define CompilingForDragon64=1 -o t32c-64.bin
+asm6809 %target% --define T32c=1 --define FileSize=%size% --define CompilingForDragon64=1 -o T32c-64.bin
 SET /A exec = 49151-%size%
 echo T32c-64.bin size = %size% , EXEC address = %exec% >> "txx file sizes.txt"
 
-asm6809 %target% --define T32=1 --define FileSize=2000 --define CompilingForDragon64=1 -o t32-64.bin
-FOR /F "usebackq" %%A IN ('t32-64.bin') DO set size=%%~zA
+asm6809 %target% --define T32=1 --define FileSize=2000 --define CompilingForDragon64=1 -o T32-64.bin
+FOR /F "usebackq" %%A IN ('T32-64.bin') DO set size=%%~zA
 SET /A size = size-9
-asm6809 %target% --define T32=1 --define FileSize=%size% --define CompilingForDragon64=1 -o t32-64.bin
+asm6809 %target% --define T32=1 --define FileSize=%size% --define CompilingForDragon64=1 -o T32-64.bin
 SET /A exec = 49151-%size
 echo T32-64.bin  size = %size% , EXEC address = %exec% >> "txx file sizes.txt"
 
@@ -73,10 +73,10 @@ echo. >> "txx file sizes.txt"
 echo Files for Dragon 32 with disk operating system >> "txx file sizes.txt"
 
 
-asm6809 %target% --define T32c=1 --define FileSize=2000 --define CompilingForDOS=1 -o t32c-dos.bin
-FOR /F "usebackq" %%A IN ('t32c-dos.bin') DO set size=%%~zA
+asm6809 %target% --define T32c=1 --define FileSize=2000 --define CompilingForDOS=1 -o T32c-dos.bin
+FOR /F "usebackq" %%A IN ('T32c-dos.bin') DO set size=%%~zA
 SET /A size = size-9
-asm6809 %target% --define T32c=1 --define FileSize=%size% --define CompilingForDOS=1 -o t32c-dos.bin
+asm6809 %target% --define T32c=1 --define FileSize=%size% --define CompilingForDOS=1 -o T32c-dos.bin
 SET /A exec = 32767-%size%+1
 echo T32c-dos.bin size = %size% , EXEC address = %exec% >> "txx file sizes.txt"
 

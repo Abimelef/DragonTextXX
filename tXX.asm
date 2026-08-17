@@ -31,10 +31,10 @@
 CUMANA equ 0					;set to 1 to complule for CUMANA (Compiling for DOS should also be set to 1)
 
 BlinkingCursor 	equ 1			;blinking cursor needs extra 46 bytes 
-SolidCursor 	equ 0			;one, and only one of these two options should be set to 1
+SolidCursor 	equ 0			;one, and only one of these two options should be set to 1. Using a solid cursor saves a few bytes
 
 ;Dragon 64 or 32?
-;CompilingForDragon64 equ 0 	;do not set this 1 and CompilingForDOS to 1 at the same time
+;CompilingForDragon64 equ 0 	;do not set this to 1 and CompilingForDOS to 1 at the same time
 
 ;Header to make bin file load properly in XROAR
 ;Using "run" in XROAR will cause a crash. "Load" the bin file and then use EXEC $BFFF-filesize for D64 and $7FFF-filesize for D32
@@ -72,11 +72,19 @@ keyBreak				equ $1B			;escape key
 ;Dragon system variables in zero page
 DeviceNumber 			equ $6F			;Device number, 0-console, -l-cassette, -2-printer
 LRCursPos 				equ $88			;ordinary low res text cursor position
-EOFFlag					equ $70			;end of file flag
+EOFFlag				    equ $70			;end of file flag
 TopOfMemforBASIC		equ $27			;set by BASIC CLEAR statement
 PMODENum				equ $B6			;Graphics PMODE number in use (0x00)
-ScreenStartAddress		equ $00BA		;holds start address of avtive graphics screen
-ScreenEndAddress		equ $00B7		;one past end of active screem
+ScreenStartAddress	    equ $00BA		;holds start address of active graphics screen
+ScreenEndAddress		equ $00B7		;one past end of active screen                                   
+Stub1NumResWords        equ $12A        ;Stub 1 - number of reserved words
+Stub1ResWrdTble         equ $12B        ;address of reserved words table
+Stub1DispRoutine        equ $12D        ;address of stub1 dispatch table
+SizeDosRWTable          equ $81         ;size of Stub1 reserved words table in ROM
+DOSNumResWords          equ $1A         ;26 - the number of DOS reserved words (commands)
+DOSResWordsTable        equ $DED4       ;Location of DOS reserved words list in ROM
+DOSDispRoutine          equ $C64C       ;Location of DOS dispatch routine in ROM
+
 
 ;Dragon text and graphics screen addresses
 LRTxtScreenStart 		equ $400
@@ -88,15 +96,15 @@ NonConsoleChrIn 		equ $B513+$4000				;input chr routine if not from console
 ScanKB					equ $8006+$4000				;scan keyboard
 EndChrIn				equ $F4C2					;the ROM routine that deals with a character after input is in a different relative postion in the D64 
 													;it is at $B4C2+$4000 rather than $B542+$4000. Maybe this is due to the autorepeat routine?
-GetByteParamInB			equ $8E51+$4000				;returns a one byte parameter from a BASIC command in b
+GetByteParamInB		    equ $8E51+$4000				;returns a one byte parameter from a BASIC command in b
 FindAndSkipComma 		equ $89AA+$4000				;finds and skips a comma in BASIC command parameters
 RaiseFCError			equ $8B8D+$4000				;raise function call error
 RaiseSNError			equ $89B4+$4000				;raise syntax error
-ProcessStdKeyword 		equ $84ED+$4000				;routine that handles normal (i.e. not new) BASIC commands and functions
+ProcessStdKeyword 	    equ $84ED+$4000				;routine that handles normal (i.e. not new) BASIC commands and functions
 ClearCommand			equ $8584+$4000				;enters CLEAR command part way through to change memory settings
 Printd					equ $957A+$4000				;prints value in d to DEVN, handy for debugging
 TextScreenNewLine		equ $90A1+$4000				;advances print position to next line of text screen
-PrintString				equ $90E5+$4000				;Out String: Prints ASCIIZ string ptd to by X to DEVN
+PrintString			    equ $90E5+$4000				;Out String: Prints ASCIIZ string ptd to by X to DEVN
 Pcls					equ $A8C4+$4000				;clears graphics screen to colour in b
 
 
@@ -104,18 +112,22 @@ Pcls					equ $A8C4+$4000				;clears graphics screen to colour in b
 NonConsoleChrIn 		equ $B513					;input chr routine if not from console
 ScanKB					equ $8006					;scan keyboard
 EndChrIn				equ $B542					;deal with chr after input (parse it etc)
-GetByteParamInB			equ $8E51					;returns a one byte parameter from a BASIC command in b
+GetByteParamInB		    equ $8E51					;returns a one byte parameter from a BASIC command in b
 FindAndSkipComma 		equ $89AA					;finds and skips a comma in BASIC command parameters
 RaiseFCError			equ $8B8D					;raise function call error
 RaiseSNError			equ $89B4					;raise syntax error
-ProcessStdKeyword 		equ $84ED					;routine that handles normal (i.e. non added) BASIC commands and functions
+ProcessStdKeyword 	    equ $84ED					;routine that handles normal (i.e. non added) BASIC commands and functions
 ClearCommand			equ $8584					;enters CLEAR command part way through to change memory settings
 Printd					equ $957A					;prints value in d to DEVN
 TextScreenNewLine		equ $90A1					;advances print position to next line of text screen
-PrintString				equ $90e5					;Out String: Prints ASCIIZ string ptd to by X to DEVN
+PrintString			    equ $90e5					;Out String: Prints ASCIIZ string ptd to by X to DEVN
 Pcls					equ $A8C4					;clears graphics screen to colour in b
 
 	ENDIF
+
+DTokLastC	            EQU	$CD                     ;Last regular basic keyword token
+DDTokLastC              EQU $E7                     ;last DOS keyword token
+TxxTokFirst             EQU $E8                     ;First Txx keyword token
 
 DOSChrOut				equ $D917
 DOSChrIn				equ $C27E
@@ -129,23 +141,22 @@ RtsOpCode				equ $39
 RamHookChrOut			equ $167
 RamHookChrOutAddress	equ $168
 RamHookChrIn			equ $16A
-RamHookChrInAddress	equ $16B
+RamHookChrInAddress		equ $16B
 
-UsrPtr 				equ   $B0						; POINTER TO USR VECTOR BASE
-
+UsrPtr 				equ   $B0		    ; POINTER TO USR VECTOR BASE
 
 	IF T32
-NumCols 				equ $20			;screen width in colums 32 in decimal
-LastCol				equ $1F
+NumCols 				equ $20			;screen width in columns 32 in decimal
+LastCol					equ $1F
 	ELSIF T32c
-NumCols 				equ $20			;screen width in colums 32 in decimal
-LastCol				equ $1F
+NumCols 				equ $20			;screen width in columns 32 in decimal
+LastCol					equ $1F
 	ELSIF T51
-NumCols 				equ $33			;screen width in colums 51 in decimal
-LastCol				equ $32
+NumCols 				equ $33			;screen width in columns 51 in decimal
+LastCol					equ $32
 	ELSIF T64 
-NumCols 				equ $40			;screen width in colums 64 in decimal
-LastCol				equ $3F
+NumCols 				equ $40			;screen width in columns 64 in decimal
+LastCol					equ $3F
 	ENDIF
 	
 ;all versions use a 24 line screen
@@ -154,28 +165,84 @@ NumRows 				equ $18			;screen depth in rows 24 in decimal
 
 ChrSetSize				equ 808		;total number of bytes in character set
 
+    IF CompilingForDos
+NumNewWords equ 5		;Number of new words to be added
+    ELSE
+NumNewWords equ 6		;DOS needs a command (TEXIT) to remove Txx if versions (T32, T51, T64 etc) are to be swapped without a reset
+    ENDIF
+
+
+
+;================================================================
 ;entry point
+;================================================================
 
+;==================================
+;Compiling for DOS
+;==================================
 ;set up dispatch table for new basic words (allows code to be relocatable)
+	IF CompilingForDOS          ;Using Stub2 to add new words when using DOS works in XROAR
+                                ;but not not on an actual Dragon (I need to figure out why).
 
+    LDA Stub1NumResWords        ;save number of DOS words          
+    STA NumDosWords,PCR 
+    LDX Stub1ResWrdTble         ;address of original DOS reserved words table
+    STX DosWordTable,PCR
+
+    ORCC #$50                   ;Binary 01010000 - sets FIRQ and IRQ to 1 i.e. disables interrupts
+    LDX Stub1DispRoutine        ;Stub1 entry in zero page - address of dispatch routine
+    STX DOSDespatch,PCR         ;Store address of Stub1 dispatch routine in DOSDespatch - used to jump to DOS command handler if command is not an added one                  
+    LDX Stub1ResWrdTble         ;Stub1 address of reserved word table
+    LEAY NewWords,PCR           ;Y= memory address of NewWords
+  
+    LDB #SizeDosRWTable         ;$81 number of bytes taken by Stub1 reserved words list (DOS Commands)
+SCL LDA ,X+                     ;copy existing Stub1 reserved words table to memory starting at NewWords
+                                ; (which will then have the ram disk new words following the DOS words)
+    STA ,Y+
+    DECB
+    BNE SCL
+    LDA #NumNewWords            ;A = number of new commands (10)
+    ADDA Stub1NumResWords       ;add to existing number of commands in Stub1
+    STA Stub1NumResWords        ;Stub1 num res words num equals the DOS total (if used) plus the num of new commands, this prob works with or without DOS!
+    LEAX NewWords,PCR           ;Point Stub1 to moved and extended words table
+    STX Stub1ResWrdTble
+    LEAX Despatch,PCR           ;X = address of new DESPATCH table 
+    STX Stub1DispRoutine        ;Point Stub1 at new DESPATCH table
+    ANDCC #$AF                  ;Binary 1010111 - sets FIRQ and IRQ to zero enabling interrupts
+;Set up jump table
 	leax at,pcr
 	stx JmpAt,pcr
-
 	leax teon,pcr
 	stx JmpTeon,pcr
-
 	leax teoff,pcr
 	stx JmpTeoff,pcr
-
 	leax tcol,pcr
 	stx JmpTcol,pcr
-
 	leax tcls,pcr
 	stx JmpTcls,pcr
-	
-;	leax thome,pcr		;spare keyword for testing
-;	stx JmpThome,pcr
+    leax texit,pcr
+    stx JmpTexit,pcr
+ 
+    RTS
+ 
+DOSDespatch RMB 2                   ;gets set to address of Stub1 dispatch table
+NumDosWords RMB 1                   ;number of DOS words - stored for use by TEXIT
+DosWordTable RMB 2                  ;DOS reserved words table - stored for use by TEXIT
 
+Despatch
+    CMPA #TxxTokFirst          ;DDTokLastC = last DOS keyword token so DDTokLastC+1 is the first Txx keyword                      
+    BLO  DosCommand             ;not one of the new ones so go process a Dragon DOS command
+    CMPA #TxxTokFirst+NumNewWords
+    BHS DosCommand              ;Not a TXX command - prob not a DOS command either and probably an error by the ROM routine can handle it
+    SUBA #TxxTokFirst           ;set up position in dispatch table to use
+    LEAX NewWordsDespTbl,PCR    ;point x to Txx commands dispatch table    
+    JMP ProcessStdKeyword       ;jump to ROM routine that will use the dispatch table to jump to the new command
+DosCommand JMP [DOSDespatch,PCR];go process normal DOS command
+
+    ELSE
+;==================================
+;Compiling non DOS Versions
+;==================================
 ;Relocate user vectors	
 	leax NewUser,pcr			;Relocate the USR
 	stx UsrPtr					;vectors
@@ -187,82 +254,92 @@ wl2
 	bne wl2					;done
 ;done relocating user vectors
 
-
-tokens equ 5		;Number of new words to be added
-;tokens equ 6		;Six if spare keyword is added for testing
-
-	IF CompilingForDOS
-Stub	equ $134		;2nd stub, 1st used for DOS commands 
-	ELSE
-Stub	equ $12A		;1st stub not otherwise used in stock Dragon 32/64
-	clr Stub+10			;indicate end of stubs
-	ENDIF
-
-	lda #tokens
-	sta Stub
+	clr Stub1NumResWords+10			;indicate end of stubs
+	lda #NumNewWords
+	sta Stub1NumResWords
 	leax NewWords,pcr
-	stx Stub + 1
-	leax NewDispatch,pcr
-	stx Stub + 3
+	stx Stub1ResWrdTble
+	leax Dispatch,pcr
+	stx Stub1DispRoutine
 
-;Use part of ROM CLEAR routine to reset top of RAM available to BASIC so we can overwrite the install portion of this application 
-;which is not needed once it is up an running
-;this will cause a crash if used by the "run" option in XROAR
-;but if loaded into XROAR and then call by EXEC $7FFF - Size of compiled bin file it works.
+	leax at,pcr
+	stx JmpAt,pcr
+	leax teon,pcr
+	stx JmpTeon,pcr
+	leax teoff,pcr
+	stx JmpTeoff,pcr
+	leax tcol,pcr
+	stx JmpTcol,pcr
+	leax tcls,pcr
+	stx JmpTcls,pcr
+    RTS                     ;need this RTS if the code above to save bytes using the  clear routine is not used.
+    
+NewUser rmb 20					;Space for relocated USR vector table
 
-	;x already = address of NewDispatch which the first code that needs to stay resident in ram
-	ldd #200				;string space
-	ldy ,s					;clear routine resets the stack so save the return address in y
-	pshs d					;save needed string space on too of stack
-	jmp ClearCommand		;jump to ROM Clear routine (part way through since we don't need to parse CLEAR parameters) 
-	jmp ,y					;CLEAR routine wipes stack so we have to move it to its new location and save the stack pointer
-
-;Everything up to here is dumped after Txx installs by resetting top of ram accessible to basic 
-;StayResidentCode
-
-NewDispatch 				;token to be processed is in reg a
-
-	IF CompilingForDOS
-ExistingTokens equ $1A
-	ELSE
-ExistingTokens equ $CE
-	ENDIF
-
-	IF CUMANA
-	suba #2
-	ENDIF
-
-	cmpa #ExistingTokens				;Check that (1A works with DOS cart inserted)
+    
+Dispatch 				;token to be processed is in reg a
+NumExistingWords equ $CE
+	cmpa #NumExistingWords				;Check that (1A works with DOS cart inserted)
 	blo err				;check token given
-	cmpa #ExistingTokens+tokens		;is within range
+	cmpa #NumExistingWords+NumNewWords		;is within range
 	bhs err				
-	suba #ExistingTokens				;Convert to table index
-	leax NewTable,pcr		;and set up table base
+	suba #NumExistingWords				;Convert to table index
+	leax NewWordsDespTbl,pcr		;and set up table base
 	jmp ProcessStdKeyword				;before jumping to BASIC
 err jmp RaiseSNError		;jump to syntax error
  
+    ENDIF                       
+;============================================================
+;End of different initialisation blocks for DOS and non DOS
+;============================================================
 
-NewWords
-	fcc /A/				;AT			change print position to row,column
-	fcb 212
-	fcc /TEO/			;TEON		TExt ON
-	fcb 206
-	fcc /TEOF/			;TEOFF		TExt OFF
-	fcb 198
-	fcc /TCO/			;TCOL		TExt Colours (no parameter for monochrome builds, ink,paper for T32c
-	fcb 204
-	fcc /TCL/			;TCLS		TextCLearScreen
-	fcb 211
+NewWords 
+    IF CompilingForDOS
+    RMB 129                    ;reserve space for relocated Stub1 words (DOS Commands)
+    ENDIF
+;now the words we are adding 
+	FCC /A/				;AT			change print position to row,column
+	FCB 212
+	FCC /TEO/			;TEON		TExt ON
+	FCB 206
+	FCC /TEOF/			;TEOFF		TExt OFF
+	FCB 198
+	FCC /TCO/			;TCOL		TExt Colours (no parameter for monochrome builds, ink,paper for T32c
+	FCB 204
+	FCC /TCL/			;TCLS		TextCLearScreen
+	FCB 211
+    IF CompilingForDOS
+    FCC /TEXI/          ;TEXTIT     Text off and delete extra words (needed in DOS version to be able to switch between different column versions)       
+    FCB 212
+    ENDIF
 
-
-NewTable
+NewWordsDespTbl
 JmpAt rmb 2
 JmpTeon rmb 2
 JmpTeoff rmb 2
 JmpTcol rmb 2
 JmpTcls rmb 2
+JmpTexit
+    IF CompilingForDOS
+    rmb 2
+    ENDIF
 
-NewUser rmb 20					;Space for relocated USR vector table
+;extra command for DOS to safely remove Txx from the system. 
+;This allows a new version (e.g. different column number)
+;to be loaded and run without a system reset.
+texit                           
+    IF CompilingForDOS
+    lbsr teoff                  ;turn off text redirection and reset Stub1. 
+    ORCC #$50                   ;Binary 01010000 - sets FIRQ and IRQ to 1 i.e. disables interrupts
+    ldx DOSDespatch,PCR  
+    stx Stub1DispRoutine        ;Stub1 entry in zero page - address of dispatch routine
+    LDA NumDosWords,PCR         ;restore number of DOS words          
+    STA Stub1NumResWords 
+    LDX DosWordTable,PCR        ;restore address of original DOS reserved words table
+    STX Stub1ResWrdTble            
+    ANDCC #$AF                  ;Binary 1010111 - sets FIRQ and IRQ to zero enabling interrupts
+    RTS    
+    ENDIF
 
 ;set print position to row,col
 at							;at command format is AT row,col
@@ -286,7 +363,7 @@ fcerr jmp RaiseFCError
 ;T32c = T32 In PMODE 3 colour
 	IF T32c
 
-tcol							;sets the ink and paper colours
+tcol						;sets the ink and paper colours
 	jsr GetByteParamInB		;get ink no.
 	cmpb #3					;max value for ink or paper
 	bgt fcerr
@@ -368,14 +445,14 @@ EndChrLoop
 	rts
 
 ChrLoop rmb 2
-Ink	fcb 1						;default to yellow text 
-Paper fcb 2						;on blue background
+Ink	FCB 1						;default to yellow text 
+Paper FCB 2						;on blue background
 NewInk rmb 1
 NewPaper rmb 1	
 BitPairNo rmb 1	
 InkTemp rmb 1
 PaperTemp rmb 1
-paperByte fcb %10101010			;blue byte
+paperByte FCB %10101010			;blue byte
 
 	ELSE
 ;###############################################	
@@ -390,7 +467,7 @@ chrColourLoop
 	bne chrColourLoop
 	rts
 
-Ink	fcb 0						;0 = black, 255 = green/white
+Ink	FCB 0						;0 = black, 255 = green/white
 
 	ENDIF
 ;###############################################
@@ -424,8 +501,8 @@ teoff
 teon
 
 	lda PMODENum							;check we are in the correct PMODE
-	IF T32c									;not critical but use of TEON with PMODE 1 or 2 could overwrite
-	cmpa #3									;BASIC storage and cause a crash 
+	IF T32c								;Use of TEON with PMODE 1 or 2 could overwrite
+	cmpa #3								;BASIC storage and cause a crash 
 	lbne fcerr
 	ELSE
 	cmpa #4
@@ -437,14 +514,14 @@ teon
 	stx	RamHookChrOutAddress				;change 2 and 3rd butes of ram hook to address of "start"
 	sta	RamHookChrOut						;change ram hook to jmp op code
 	leax keys,pcr							;address of routine to flash cursor and check for clear or break key during test input
-	stx RamHookChrInAddress					;RAM hook for get single character from keyboard
+	stx RamHookChrInAddress				;RAM hook for get single character from keyboard
 	sta RamHookChrIn						;used to intercept clear key
 	lbsr ClearScreen
 	rts
 
 
-row fcb 0						;row to print on (starts at row 0 goes up to LastRow)
-col fcb 0						;column to print on (from zero to LastCol)
+row FCB 0						;row to print on (starts at row 0 goes up to LastRow)
+col FCB 0						;column to print on (from zero to LastCol)
 
 start										;entry point to print chr on screen
 	tst	<DeviceNumber						;check it is printing to screen not cassette or printer
@@ -459,9 +536,9 @@ start										;entry point to print chr on screen
 HandleChr
 	leas 2,s							;pop normal return address as we don't want to print to the text screen
 	pshs y, x, b,a,u					;save register contents	
-	ldx	#LRTxtScreen2ndPos				;needed to make sure we get proper line feeds during a list command
+	ldx	#LRTxtScreen2ndPos			;needed to make sure we get proper line feeds during a list command
 	stx	<LRCursPos						;set normal text cursor position to second space on screen
-	cmpa #chrBackspace					;check for backspace
+	cmpa #chrBackspace				;check for backspace
 	bne notBackspace
 ;handle backspace key - should not get here if already at zero in chr buffer
 	ldb col,pcr							;check cursor not at column zero
@@ -616,7 +693,7 @@ SetCursor					;print a blank space where the cursor was
 
 CursorDelay1	equ $C8
 CursorDelay2	equ $FF
-CurCount fcb CursorDelay2			;cursor timer
+CurCount FCB CursorDelay2			;cursor timer
 CursorStatus rmb 1				;cursor B or W
 
 DoCursor
@@ -720,7 +797,7 @@ PrintSliceLoop
 	lda	#$05							;chr width
 	mul									;d = pixel X co-ordinate of top left of where chr will be printed	
 CBytes
-	cmpb	#$08						;less than a byte (result of mul is in d but cannot be more than 5 x 50 so really its just in b)
+	cmpb	#$08						;less than a byte (result of mul is in d but cannot be more than 5 x 50 so really its just in b and a=0 unless something has gone very badly wrong)
 	blo	BytesCounted
 	inca								;use a to count bytes in pixel x coord
 	subb	#$08
@@ -746,7 +823,7 @@ ShiftMaskLoop
 	dec bitcount,pcr					;bit counter -1
 	bra ShiftMaskLoop
 MaskShiftDone
-	std Mask,pcr 			;dispose of top value on stack (bit counter)						
+	std Mask,pcr
 
 ;loop to print each chr slice	
 	lda #8
@@ -788,7 +865,7 @@ ShiftSliceDone
 bitcount rmb 1					;bit counter
 Mask rmb 2						;
 Slice rmb 2					;
-PrintLoopCount fcb 1			;
+PrintLoopCount FCB 1			;
 
 ;###########################################################################	
 	ELSIF T64
@@ -845,7 +922,7 @@ PrintSliceLoop
 	;###########################################################################
 ;}
 
-
+ 
 
 ;Alternative character sets can be referenced here.
 ;Comment out the current one and add a reference to the new as needed

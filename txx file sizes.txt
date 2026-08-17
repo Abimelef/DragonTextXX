@@ -1,17 +1,17 @@
 Files for Dragon 32 no disk operating system 
-T32c.bin size = 1476 , EXEC address = 31292 
-T32.bin  size = 1372 , EXEC address = 31396 
-T51.bin  size = 1463 , EXEC address = 31305 
-T64.bin  size = 1402 , EXEC address = 31366 
+T32c.bin size = 1462 , EXEC address = 31306 
+T32.bin  size = 1357 , EXEC address = 31411 
+T51.bin  size = 1448 , EXEC address = 31320 
+T64.bin  size = 1387 , EXEC address = 31381 
  
 Files for Dragon 64 no disk operating system 
-T32c-64.bin size = 1476 , EXEC address = 47675 
-T32-64.bin  size = 1372 , EXEC address = 47779 
-T51-64.bin  size = 1463 , EXEC address = 47688 
-T64-64.bin  size = 1402 , EXEC address = 47749 
+T32c-64.bin size = 1462 , EXEC address = 47689 
+T32-64.bin  size = 1357 , EXEC address = 47794 
+T51-64.bin  size = 1448 , EXEC address = 47703 
+T64-64.bin  size = 1387 , EXEC address = 47764 
  
 Files for Dragon 32 with disk operating system 
-T32c-dos.bin size = 1479 , EXEC address = 31289 
-T32-dos.bin  size = 1375 , EXEC address = 31393 
-T51-dos.bin  size = 1466 , EXEC address = 31302 
-T64-dos.bin  size = 1405 , EXEC address = 31363 
+T32c-dos.bin size = 1653 , EXEC address = 31115 
+T32-dos.bin  size = 1549 , EXEC address = 31219 
+T51-dos.bin  size = 1640 , EXEC address = 31128 
+T64-dos.bin  size = 1579 , EXEC address = 31189 
